@@ -2,15 +2,14 @@ package org.ggg.engine.consts;
 
 import org.ggg.engine.Engine;
 import org.ggg.engine.io.script.node.Node;
+import org.ggg.engine.io.script.node.ScriptEndNode;
+import org.ggg.engine.io.script.node.ScriptJumpToNode;
 import org.ggg.engine.io.script.node.ScriptStartNode;
 
-/**
- * Created by Alex on 6/27/2017.
- */
 public enum EnumNodes {
-    START("start", new ScriptStartNode(Engine.getScriptLoader())),
-    JUMPTO("start", new ScriptStartNode(Engine.getScriptLoader())),
-    END("start", new ScriptStartNode(Engine.getScriptLoader()));
+    START("start", ScriptStartNode.INSTANCE),
+    JUMPTO("jumpto", ScriptJumpToNode.INSTANCE),
+    END("end", ScriptEndNode.INSTANCE);
 
     String name;
     Node node;
