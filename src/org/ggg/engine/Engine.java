@@ -12,19 +12,24 @@ public class Engine {
     public static final EngineLogger LOGGER = new EngineLogger("engine");
     public static EnumEngineState stateOfEngine;
 
+    private static ScriptLoader gameScriptLoader;
+
     public void start(EnumEngineState state){
         stateOfEngine = state;
         if(state == EnumEngineState.DEBUGGER_ON) {
             LOGGER.log("Engine initialization starting...", EnumLoggerTypes.SYSOUT);
         }
         try {
-            ScriptLoader loader = new ScriptLoader("test");
-            ScriptDialog dialog = new ScriptDialog(loader);
-            for(int i = 0; i < dialog.getTotalLines(); i++) {
-                LOGGER.log(dialog.getDialogAtLine(i, loader.getScriptFile()), EnumLoggerTypes.SYSOUT);
-            }
+            gameScriptLoader = new ScriptLoader("test");
+            gameScriptLoader.loadScript();
+            ScriptDialog dialog = new ScriptDialog(gameScriptLoader);
+            LOGGER.log(dialog.readDialog(), EnumLoggerTypes.SYSOUT);
         }catch(IOException e){
             LOGGER.log(e.getMessage(), EnumLoggerTypes.ERROR);
         }
+    }
+
+    public static ScriptLoader getScriptLoader(){
+        return gameScriptLoader;
     }
 }

@@ -1,4 +1,7 @@
-This is a test
-This is the second line
-Here is another line
-Lastly, this is another line
+:start
+This is a test.
+This is the second line.
+Here is another line.
+Lastly, this is another line.
+:jumpto 'test2'
+:end
