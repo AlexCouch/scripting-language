@@ -19,7 +19,6 @@ public abstract class Node {
     public Node(EnumNodeTypes nodeType, ScriptLoader loader){
         scriptLoader = loader;
         node = nodeType;
-        loader.setNodes();
     }
 
     public long getLineNumber(EnumNodeTypes node){

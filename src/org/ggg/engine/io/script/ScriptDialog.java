@@ -48,42 +48,44 @@ public class ScriptDialog {
     public String readDialog(){
         String result = null;
         Pattern startpat = Pattern.compile(EnumNodeTypes.START.getName());
-        Pattern jumptopat = Pattern.compile(EnumNodeTypes.JUMPTO.getName());
+        Pattern jumptopat = Pattern.compile(EnumNodeTypes.JUMPTO.getName() + "//s+'[A-Za-z0-9]'");
         Pattern endpat = Pattern.compile(EnumNodeTypes.END.getName());
+        String line;
         try(Scanner scanner = new Scanner(loader.getScriptFile())) {
-            String line = scanner.nextLine();
+            line = scanner.nextLine();
             if (startpat.matcher(line).matches()) {
-                while(scanner.hasNextLine()){
-                    Node node = this.loader.getNode(line);
-                    if (Engine.stateOfEngine == EnumEngineState.DEBUGGER_ON) {
-                        Engine.LOGGER.log("Reading dialog from script: " + loader.getScriptFile().getAbsolutePath(), EnumLoggerTypes.DEBUG);
+                result = null;
+            }
+            while(scanner.hasNextLine()) {
+                line = scanner.nextLine();
+                Node node = this.loader.getNode(line);
+                if (Engine.stateOfEngine == EnumEngineState.DEBUGGER_ON) {
+                    Engine.LOGGER.log("Reading dialog from script: " + loader.getScriptFile().getAbsolutePath(), EnumLoggerTypes.DEBUG);
+                }
+                Pattern pat = Pattern.compile("^[A-Za-z,;'\"\\s]+[.?!]$");
+                Matcher mat = pat.matcher(line);
+                if (mat.matches()) {
+                    if (result == null) {
+                        result = mat.group() + "\n";
+                    } else {
+                        result += mat.group() + "\n";
                     }
-                    Pattern pat = Pattern.compile("^[A-Za-z,;'\"\\s]+[.?!]$");
-                    Matcher mat = pat.matcher(line);
-                    if (mat.matches()) {
-                        if (result == null) {
-                            result = mat.group() + "\n";
+                } else if (jumptopat.matcher(line).matches()) {
+                    String l = scanner.next(node.getName());
+                    String fileName = l.substring(node.getName().length());
+                    Pattern p = Pattern.compile("[a-zA-Z]");
+                    if (fileName.contains(p.pattern())) {
+                        File file = new File(p.pattern() + ".gg");
+                        if (file.exists()) {
+                            ScriptLoader newLoader = new ScriptLoader(file.getName());
+                            newLoader.loadScript();
+                            ScriptDialog newDialog = new ScriptDialog(newLoader);
+                            newDialog.readDialog();
                         }
-                        else {
-                            result += mat.group() + "\n";
-                        }
-                    }else if (jumptopat.matcher(line).matches()) {
-                        String l = scanner.next(node.getName());
-                        String fileName = l.substring(node.getName().length());
-                        Pattern p = Pattern.compile("[a-zA-Z]");
-                        if (fileName.contains("'" + p.pattern() + ".gg'")) {
-                            File file = new File(p.pattern() + ".gg");
-                            if (file.exists()) {
-                                ScriptLoader newLoader = new ScriptLoader(file.getName());
-                                newLoader.loadScript();
-                                ScriptDialog newDialog = new ScriptDialog(newLoader);
-                                newDialog.readDialog();
-                            }
-                        }
-                    }else if (endpat.matcher(line).matches()) {
-                        scanner.close();
-                        return result;
                     }
+                } else if (endpat.matcher(line).matches()) {
+                    scanner.close();
+                    return result;
                 }
             }
         }catch(IOException e){
