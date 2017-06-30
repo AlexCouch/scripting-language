@@ -3,13 +3,10 @@ package org.ggg.engine.io.script;
 import org.ggg.engine.Engine;
 import org.ggg.engine.consts.EnumEngineState;
 import org.ggg.engine.consts.EnumLoggerTypes;
-import org.ggg.engine.consts.EnumNodeTypes;
+import org.ggg.engine.consts.EnumNodes;
 import org.ggg.engine.exceptions.NullScriptLoaderException;
-import org.ggg.engine.exceptions.NullScriptNodeException;
-import org.ggg.engine.io.script.node.Node;
-import org.ggg.engine.io.script.node.ScriptEndNode;
-import org.ggg.engine.io.script.node.ScriptJumpToNode;
-import org.ggg.engine.io.script.node.ScriptStartNode;
+import org.ggg.engine.io.resloc.ResourceLocation;
+import org.ggg.engine.io.script.node.ScriptWaitNode;
 
 import java.io.File;
 import java.io.IOException;
@@ -47,22 +44,27 @@ public class ScriptDialog {
 
     public String readDialog(){
         String result = null;
-        Pattern startpat = Pattern.compile(EnumNodeTypes.START.getName());
-        Pattern jumptopat = Pattern.compile(EnumNodeTypes.JUMPTO.getName() + "//s+'[A-Za-z0-9]'");
-        Pattern endpat = Pattern.compile(EnumNodeTypes.END.getName());
+        Pattern startpat = Pattern.compile("(:start)");
+        Pattern jumptopat = Pattern.compile("(:jumpto)\\s\'[a-zA-Z_]+([0-9]*?)\'");
+        Pattern waitpat = Pattern.compile("^(:wait)(\\[([a-zA-Z]+)\\]$)");
+        Pattern ifpat = Pattern.compile("^(:if)(\\[([a-zA-Z|]+)\\]$)");
+        Pattern elifpat = Pattern.compile("^(:if)(\\[([a-zA-Z]+)\\]$)");
+        Pattern endpat = Pattern.compile("(:end)");
         String line;
         try(Scanner scanner = new Scanner(loader.getScriptFile())) {
             line = scanner.nextLine();
             if (startpat.matcher(line).matches()) {
+                if(Engine.stateOfEngine == EnumEngineState.DEBUGGER_ON) {
+                    Engine.LOGGER.log("Reading from: " + this.loader.getScriptFile().getName() + "\n", EnumLoggerTypes.DEBUG);
+                }
                 result = null;
             }
             while(scanner.hasNextLine()) {
                 line = scanner.nextLine();
-                Node node = this.loader.getNode(line);
                 if (Engine.stateOfEngine == EnumEngineState.DEBUGGER_ON) {
                     Engine.LOGGER.log("Reading dialog from script: " + loader.getScriptFile().getAbsolutePath(), EnumLoggerTypes.DEBUG);
                 }
-                Pattern pat = Pattern.compile("^[A-Za-z,;'\"\\s]+[.?!]$");
+                Pattern pat = Pattern.compile("^[A-Za-z,;'\"\\s]+([.?!]*)$");
                 Matcher mat = pat.matcher(line);
                 if (mat.matches()) {
                     if (result == null) {
@@ -71,19 +73,29 @@ public class ScriptDialog {
                         result += mat.group() + "\n";
                     }
                 } else if (jumptopat.matcher(line).matches()) {
-                    String l = scanner.next(node.getName());
-                    String fileName = l.substring(node.getName().length());
-                    Pattern p = Pattern.compile("[a-zA-Z]");
-                    if (fileName.contains(p.pattern())) {
-                        File file = new File(p.pattern() + ".gg");
-                        if (file.exists()) {
-                            ScriptLoader newLoader = new ScriptLoader(file.getName());
+                    String nodeName = EnumNodes.JUMPTO.getName();
+                    String fileName = line.substring(nodeName.length()+3, line.length()-1);
+                    if (fileName.contains(fileName)) {
+                        File file = new File("resources/scripts/" + fileName + ".gg");
+                        ResourceLocation resloc = new ResourceLocation(file.getPath());
+                        if (resloc.getFile().exists()) {
+                            ScriptLoader newLoader = new ScriptLoader(fileName);
                             newLoader.loadScript();
                             ScriptDialog newDialog = new ScriptDialog(newLoader);
-                            newDialog.readDialog();
+                            result += newDialog.readDialog();
+                            if(Engine.stateOfEngine == EnumEngineState.DEBUGGER_ON) {
+                                Engine.LOGGER.log("=========================", EnumLoggerTypes.DEBUG);
+                            }
                         }
                     }
-                } else if (endpat.matcher(line).matches()) {
+                }else if(waitpat.matcher(line).matches()){
+                    String input = line.substring(EnumNodes.WAIT.getName().length()+1, line.length()-1);
+                    String[] args = new String[]{input};
+                    ScriptWaitNode.INSTANCE.perform(args);
+                }else if(ifpat.matcher(line).matches()){
+                    String[] splitStr = line.split("|");
+                }
+                else if (endpat.matcher(line).matches()) {
                     scanner.close();
                     return result;
                 }

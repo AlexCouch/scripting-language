@@ -1,14 +1,13 @@
 package org.ggg.engine.consts;
 
-import org.ggg.engine.Engine;
-import org.ggg.engine.io.script.node.Node;
-import org.ggg.engine.io.script.node.ScriptEndNode;
-import org.ggg.engine.io.script.node.ScriptJumpToNode;
-import org.ggg.engine.io.script.node.ScriptStartNode;
+import org.ggg.engine.io.script.node.*;
 
 public enum EnumNodes {
     START("start", ScriptStartNode.INSTANCE),
     JUMPTO("jumpto", ScriptJumpToNode.INSTANCE),
+    WAIT("wait", ScriptWaitNode.INSTANCE),
+    IF("if", ScriptIfNode.INSTANCE),
+    ELIF("elif", ScriptElifNode.INSTANCE),
     END("end", ScriptEndNode.INSTANCE);
 
     String name;
@@ -25,5 +24,10 @@ public enum EnumNodes {
 
     public Node getNode(){
         return this.node;
+    }
+
+    @Override
+    public String toString() {
+        return this.getName();
     }
 }

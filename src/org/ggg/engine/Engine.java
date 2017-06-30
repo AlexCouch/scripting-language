@@ -20,7 +20,7 @@ public class Engine {
             LOGGER.log("Engine initialization starting...", EnumLoggerTypes.SYSOUT);
         }
         try {
-            gameScriptLoader = new ScriptLoader("test");
+            gameScriptLoader = new ScriptLoader("start");
             gameScriptLoader.loadScript();
             ScriptDialog dialog = new ScriptDialog(gameScriptLoader);
             LOGGER.log(dialog.readDialog(), EnumLoggerTypes.SYSOUT);

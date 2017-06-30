@@ -2,7 +2,7 @@ package org.ggg.engine.io.script.node;
 
 import org.ggg.engine.Engine;
 import org.ggg.engine.consts.EnumLoggerTypes;
-import org.ggg.engine.consts.EnumNodeTypes;
+import org.ggg.engine.consts.EnumNodes;
 import org.ggg.engine.io.script.ScriptLoader;
 
 import java.io.IOException;
@@ -14,14 +14,14 @@ import java.util.stream.Stream;
 public abstract class Node {
 
     private static ScriptLoader scriptLoader;
-    private static EnumNodeTypes node;
+    private static EnumNodes node;
 
-    public Node(EnumNodeTypes nodeType, ScriptLoader loader){
+    public Node(EnumNodes nodeType, ScriptLoader loader){
         scriptLoader = loader;
         node = nodeType;
     }
 
-    public long getLineNumber(EnumNodeTypes node){
+    public long getLineNumber(EnumNodes node){
         try(Scanner scanner = new Scanner(scriptLoader.getScriptFile()); Stream<String> stream = Files.lines(Paths.get(scriptLoader.getScriptFile().getAbsolutePath()))){
             String line;
             while((line = scanner.nextLine()) != null){
@@ -46,4 +46,6 @@ public abstract class Node {
             throw new RuntimeException("No such node by name of " + name);
         }
     }
+
+    public abstract <T> boolean perform(T[] params);
 }

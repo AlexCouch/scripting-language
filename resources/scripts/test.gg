@@ -1,7 +1,5 @@
-:start
-This is a test.
-This is the second line.
-Here is another line.
-Lastly, this is another line.
-:jumpto 'test2'
-:end
+:wait[input]
+:if[input=right || input=Right]:
+:jumpto 'fork_right'
+:elif[input=left || input=Left]:
+:jumpto 'fork_left'
