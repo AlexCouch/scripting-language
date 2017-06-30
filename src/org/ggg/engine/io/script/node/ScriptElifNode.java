@@ -8,7 +8,7 @@ import java.util.ArrayList;
 
 public class ScriptElifNode extends Node{
 
-    public static final Node INSTANCE = new ScriptElifNode(Engine.getScriptLoader());
+    public static final ScriptElifNode INSTANCE = new ScriptElifNode(Engine.getScriptLoader());
 
     public ScriptElifNode(ScriptLoader loader) {
         super(EnumNodes.ELIF, loader);

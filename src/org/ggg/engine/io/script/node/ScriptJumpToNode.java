@@ -6,7 +6,7 @@ import org.ggg.engine.io.script.ScriptLoader;
 
 public class ScriptJumpToNode extends Node{
 
-    public static final Node INSTANCE = new ScriptJumpToNode(Engine.getScriptLoader());
+    public static final ScriptJumpToNode INSTANCE = new ScriptJumpToNode(Engine.getScriptLoader());
 
     public ScriptJumpToNode(ScriptLoader loader) {
         super(EnumNodes.JUMPTO, loader);

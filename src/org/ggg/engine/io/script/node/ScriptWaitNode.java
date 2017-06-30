@@ -11,7 +11,7 @@ public class ScriptWaitNode extends Node{
     private Map<String, String> inputMap = new HashMap<>();
     public List<Map<String, String>> inputList = new ArrayList<>();
 
-    public static final Node INSTANCE = new ScriptWaitNode(Engine.getScriptLoader());
+    public static final ScriptWaitNode INSTANCE = new ScriptWaitNode(Engine.getScriptLoader());
 
     public ScriptWaitNode(ScriptLoader loader) {
         super(EnumNodes.WAIT, loader);
@@ -30,6 +30,7 @@ public class ScriptWaitNode extends Node{
                         inputMap.put(name, scanner.nextLine());
                         inputList.add(inputMap);
                     }
+                    scanner.close();
                 }
             }
         }, 1000);

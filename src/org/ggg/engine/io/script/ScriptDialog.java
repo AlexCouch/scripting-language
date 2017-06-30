@@ -6,14 +6,18 @@ import org.ggg.engine.consts.EnumLoggerTypes;
 import org.ggg.engine.consts.EnumNodes;
 import org.ggg.engine.exceptions.NullScriptLoaderException;
 import org.ggg.engine.io.resloc.ResourceLocation;
+import org.ggg.engine.io.script.node.Node;
+import org.ggg.engine.io.script.node.ScriptElifNode;
+import org.ggg.engine.io.script.node.ScriptIfNode;
 import org.ggg.engine.io.script.node.ScriptWaitNode;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Scanner;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
@@ -42,14 +46,15 @@ public class ScriptDialog {
         return 0;
     }
 
-    public String readDialog(){
-        String result = null;
+    public void readDialog(){
         Pattern startpat = Pattern.compile("(:start)");
         Pattern jumptopat = Pattern.compile("(:jumpto)\\s\'[a-zA-Z_]+([0-9]*?)\'");
         Pattern waitpat = Pattern.compile("^(:wait)(\\[([a-zA-Z]+)\\]$)");
-        Pattern ifpat = Pattern.compile("^(:if)(\\[([a-zA-Z|]+)\\]$)");
-        Pattern elifpat = Pattern.compile("^(:if)(\\[([a-zA-Z]+)\\]$)");
+        Pattern ifpat = Pattern.compile("^(:if)(\\[([a-zA-Z]+)=([a-zA-Z]+)([\\s]*)\\|\\|([\\s]*)([a-zA-Z]+)=([a-zA-Z]+)([\\s]*)\\]:)");
+        Pattern elifpat = Pattern.compile("^(:elif)(\\[([a-zA-Z]+)=([a-zA-Z]+)([\\s]*)\\|\\|([\\s]*)([a-zA-Z]+)=([a-zA-Z]+)([\\s]*)\\]:)");
         Pattern endpat = Pattern.compile("(:end)");
+        Set<String> inputValues = new HashSet<>();
+        boolean doesPriorIfExist = false;
         String line;
         try(Scanner scanner = new Scanner(loader.getScriptFile())) {
             line = scanner.nextLine();
@@ -57,21 +62,16 @@ public class ScriptDialog {
                 if(Engine.stateOfEngine == EnumEngineState.DEBUGGER_ON) {
                     Engine.LOGGER.log("Reading from: " + this.loader.getScriptFile().getName() + "\n", EnumLoggerTypes.DEBUG);
                 }
-                result = null;
             }
             while(scanner.hasNextLine()) {
                 line = scanner.nextLine();
                 if (Engine.stateOfEngine == EnumEngineState.DEBUGGER_ON) {
                     Engine.LOGGER.log("Reading dialog from script: " + loader.getScriptFile().getAbsolutePath(), EnumLoggerTypes.DEBUG);
                 }
-                Pattern pat = Pattern.compile("^[A-Za-z,;'\"\\s]+([.?!]*)$");
+                Pattern pat = Pattern.compile("^(([\"]*)([A-Za-z,;:'\"\\s]+([.?!]*))([\"]*))$");
                 Matcher mat = pat.matcher(line);
                 if (mat.matches()) {
-                    if (result == null) {
-                        result = mat.group() + "\n";
-                    } else {
-                        result += mat.group() + "\n";
-                    }
+                    Engine.LOGGER.log(line, EnumLoggerTypes.SYSOUT);
                 } else if (jumptopat.matcher(line).matches()) {
                     String nodeName = EnumNodes.JUMPTO.getName();
                     String fileName = line.substring(nodeName.length()+3, line.length()-1);
@@ -82,28 +82,56 @@ public class ScriptDialog {
                             ScriptLoader newLoader = new ScriptLoader(fileName);
                             newLoader.loadScript();
                             ScriptDialog newDialog = new ScriptDialog(newLoader);
-                            result += newDialog.readDialog();
+                            newDialog.readDialog();
                             if(Engine.stateOfEngine == EnumEngineState.DEBUGGER_ON) {
                                 Engine.LOGGER.log("=========================", EnumLoggerTypes.DEBUG);
                             }
                         }
                     }
                 }else if(waitpat.matcher(line).matches()){
-                    String input = line.substring(EnumNodes.WAIT.getName().length()+1, line.length()-1);
-                    String[] args = new String[]{input};
-                    ScriptWaitNode.INSTANCE.perform(args);
-                }else if(ifpat.matcher(line).matches()){
-                    String[] splitStr = line.split("|");
-                }
-                else if (endpat.matcher(line).matches()) {
+                    int beginIndex = line.indexOf("[");
+                    int endIndex = line.lastIndexOf("]");
+                    String arg = line.substring(beginIndex+1, endIndex);
+                    String[] strs = new String[]{arg};
+                    if(ScriptWaitNode.INSTANCE.perform(strs)){
+                        for(Map<String, String> map : ScriptWaitNode.INSTANCE.inputList){
+                            for(String str : map.keySet()){
+                                inputValues.add(str);
+                            }
+                        }
+                    }
+                }else if(ifpat.matcher(line).matches()) {
+                    String[] splitStr = line.split("[|]{2}");
+                    for(String s : splitStr) {
+                        List<String> list = new ArrayList<>();
+                        String str1, str2;
+                        if(s.contains(":if[")){
+                            str1 = splitStr[0].substring(s.indexOf("["));
+                            list.add(str1);
+                        }else if(s.contains("]:")){
+                            str2 = splitStr[1].substring(s.indexOf("]"));
+                            list.add(str2);
+                        }
+                        if (ScriptIfNode.INSTANCE.perform(new Object[]{list, inputValues})) {
+                            doesPriorIfExist = true;
+                        }
+                    }
+                }else if(elifpat.matcher(line).matches()){
+                    if(doesPriorIfExist) {
+                        ScriptElifNode.INSTANCE.perform(new Node[]{ScriptIfNode.INSTANCE});
+                    }else{
+                        throw new RuntimeException("'elif' without 'if'!", new Throwable(String.valueOf(loader.getLineNum(line))));
+                    }
+                }else if (endpat.matcher(line).matches()) {
                     scanner.close();
-                    return result;
+                }else{
+                    scanner.close();
+                    throw new RuntimeException(line + " is not recognizable!");
                 }
             }
         }catch(IOException e){
             Engine.LOGGER.log(e.getMessage(), EnumLoggerTypes.ERROR);
         }
-        return null;
     }
 
     public String getDialogAtLine(int i, File file) {

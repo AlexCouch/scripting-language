@@ -6,7 +6,7 @@ import org.ggg.engine.io.script.ScriptLoader;
 
 public class ScriptEndNode extends Node{
 
-    public static final Node INSTANCE = new ScriptEndNode(Engine.getScriptLoader());
+    public static final ScriptEndNode INSTANCE = new ScriptEndNode(Engine.getScriptLoader());
 
     public ScriptEndNode(ScriptLoader loader) {
         super(EnumNodes.END, loader);

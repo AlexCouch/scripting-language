@@ -23,7 +23,7 @@ public class Engine {
             gameScriptLoader = new ScriptLoader("start");
             gameScriptLoader.loadScript();
             ScriptDialog dialog = new ScriptDialog(gameScriptLoader);
-            LOGGER.log(dialog.readDialog(), EnumLoggerTypes.SYSOUT);
+            dialog.readDialog();
         }catch(IOException e){
             LOGGER.log(e.getMessage(), EnumLoggerTypes.ERROR);
         }
