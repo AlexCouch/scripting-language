@@ -13,7 +13,7 @@ public class ScriptEndNode extends Node{
     }
 
     @Override
-    public <T> boolean perform(T[] params) {
-        return false;
+    public boolean perform(String... params) {
+        return true;
     }
 }

@@ -103,22 +103,31 @@ public class ScriptDialog {
                 }else if(ifpat.matcher(line).matches()) {
                     String[] splitStr = line.split("[|]{2}");
                     for(String s : splitStr) {
-                        List<String> list = new ArrayList<>();
                         String str1, str2;
                         if(s.contains(":if[")){
-                            str1 = splitStr[0].substring(s.indexOf("["));
-                            list.add(str1);
+                            str1 = s.substring(s.indexOf("["));
+                            if (ScriptIfNode.INSTANCE.perform(str1)) {
+                                doesPriorIfExist = true;
+                            }
                         }else if(s.contains("]:")){
-                            str2 = splitStr[1].substring(s.indexOf("]"));
-                            list.add(str2);
-                        }
-                        if (ScriptIfNode.INSTANCE.perform(new Object[]{list, inputValues})) {
-                            doesPriorIfExist = true;
+                            str2 = s.substring(s.indexOf("]"));
+                            if (ScriptIfNode.INSTANCE.perform(str2)) {
+                                doesPriorIfExist = true;
+                            }
                         }
                     }
                 }else if(elifpat.matcher(line).matches()){
                     if(doesPriorIfExist) {
-                        ScriptElifNode.INSTANCE.perform(new Node[]{ScriptIfNode.INSTANCE});
+                        String[] splitstr = line.split("[|]{2}");
+                        for(String s : splitstr){
+                            String str1 = null, str2 = null;
+                            if(s.contains(":elif[")){
+                                str1 = splitstr[0].substring(s.indexOf("["));
+                            }else if(s.contains("]:")){
+                                str2 = s.substring(s.indexOf("]"));
+                            }
+                            ScriptElifNode.INSTANCE.perform(str1, str2);
+                        }
                     }else{
                         throw new RuntimeException("'elif' without 'if'!", new Throwable(String.valueOf(loader.getLineNum(line))));
                     }

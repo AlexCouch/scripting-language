@@ -18,20 +18,18 @@ public class ScriptWaitNode extends Node{
     }
 
     @Override
-    public <T> boolean perform(T[] params) {
+    public boolean perform(String... params) {
         Timer timer = new Timer();
         timer.schedule(new TimerTask() {
             @Override
             public void run() {
-                if(params[0] instanceof String){
-                    String name = (String)params[0];
-                    Scanner scanner = new Scanner(System.in);
-                    while(scanner.hasNextLine()){
-                        inputMap.put(name, scanner.nextLine());
-                        inputList.add(inputMap);
-                    }
-                    scanner.close();
+                String name = (String)params[0];
+                Scanner scanner = new Scanner(System.in);
+                while(scanner.hasNextLine()){
+                    inputMap.put(name, scanner.nextLine());
+                    inputList.add(inputMap);
                 }
+                scanner.close();
             }
         }, 1000);
         return true;

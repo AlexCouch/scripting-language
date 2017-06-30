@@ -17,9 +17,8 @@ public class ScriptIfNode extends Node{
     }
 
     @Override
-    public <T> boolean perform(T[]params) {
-        String value = null;
-        List<List> list = new ArrayList<>();
+    public boolean perform(String...params) {
+        /*List<List> list = new ArrayList<>();
         if(params[0] instanceof List){
             List l = (List)params[0];
             list.add(l);
@@ -50,6 +49,14 @@ public class ScriptIfNode extends Node{
                         }
                     }
                 }
+            }
+        }*/
+        for(String s : params){
+            Boolean bool = Boolean.valueOf(s);
+            if(bool){
+                return true;
+            }else{
+                return false;
             }
         }
         return false;

@@ -15,20 +15,8 @@ public class ScriptElifNode extends Node{
     }
 
     @Override
-    public <T> boolean perform(T[] params) {
-        if(params.length > 0) {
-            if (params[0] instanceof ScriptIfNode) {
-                ArrayList<T> list = new ArrayList<>();
-                for(T t : params){
-                    list.add(t);
-                }
-
-                list.remove(0);
-                T[] tArray = list.toArray(params);
-                ScriptIfNode.INSTANCE.perform(tArray);
-                return true;
-            }
-        }
-        return false;
+    public boolean perform(String... params) {
+        ScriptIfNode.INSTANCE.perform(params);
+        return true;
     }
 }

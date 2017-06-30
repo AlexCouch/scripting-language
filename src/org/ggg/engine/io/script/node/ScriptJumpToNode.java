@@ -13,7 +13,7 @@ public class ScriptJumpToNode extends Node{
     }
 
     @Override
-    public <T> boolean perform(T[] params) {
+    public boolean perform(String... params) {
         return false;
     }
 }
