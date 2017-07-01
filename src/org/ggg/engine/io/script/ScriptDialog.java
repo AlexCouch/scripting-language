@@ -6,12 +6,11 @@ import org.ggg.engine.consts.EnumLoggerTypes;
 import org.ggg.engine.consts.EnumNodes;
 import org.ggg.engine.exceptions.NullScriptLoaderException;
 import org.ggg.engine.io.resloc.ResourceLocation;
-import org.ggg.engine.io.script.node.Node;
 import org.ggg.engine.io.script.node.ScriptElifNode;
 import org.ggg.engine.io.script.node.ScriptIfNode;
 import org.ggg.engine.io.script.node.ScriptWaitNode;
+import org.ggg.engine.io.script.node.logic.consts.VariableStorage;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -53,7 +52,6 @@ public class ScriptDialog {
         Pattern ifpat = Pattern.compile("^(:if)(\\[([a-zA-Z]+)=([a-zA-Z]+)([\\s]*)\\|\\|([\\s]*)([a-zA-Z]+)=([a-zA-Z]+)([\\s]*)\\]:)");
         Pattern elifpat = Pattern.compile("^(:elif)(\\[([a-zA-Z]+)=([a-zA-Z]+)([\\s]*)\\|\\|([\\s]*)([a-zA-Z]+)=([a-zA-Z]+)([\\s]*)\\]:)");
         Pattern endpat = Pattern.compile("(:end)");
-        Set<String> inputValues = new HashSet<>();
         boolean doesPriorIfExist = false;
         String line;
         try(Scanner scanner = new Scanner(loader.getScriptFile())) {
@@ -92,41 +90,38 @@ public class ScriptDialog {
                     int beginIndex = line.indexOf("[");
                     int endIndex = line.lastIndexOf("]");
                     String arg = line.substring(beginIndex+1, endIndex);
-                    String[] strs = new String[]{arg};
-                    if(ScriptWaitNode.INSTANCE.perform(strs)){
-                        for(Map<String, String> map : ScriptWaitNode.INSTANCE.inputList){
-                            for(String str : map.keySet()){
-                                inputValues.add(str);
-                            }
+                    if(ScriptWaitNode.INSTANCE.perform(arg)){
+                        for(String s : ScriptWaitNode.INSTANCE.inputMap.values()){
+                            VariableStorage.setVars(arg, s);
                         }
                     }
                 }else if(ifpat.matcher(line).matches()) {
                     String[] splitStr = line.split("[|]{2}");
-                    for(String s : splitStr) {
-                        String str1, str2;
-                        if(s.contains(":if[")){
-                            str1 = s.substring(s.indexOf("["));
-                            if (ScriptIfNode.INSTANCE.perform(str1)) {
-                                doesPriorIfExist = true;
-                            }
-                        }else if(s.contains("]:")){
-                            str2 = s.substring(s.indexOf("]"));
-                            if (ScriptIfNode.INSTANCE.perform(str2)) {
-                                doesPriorIfExist = true;
-                            }
-                        }
+                    String s1 = splitStr[0];
+                    String s2 = splitStr[1];
+                    String s3 = s1.substring(s1.indexOf("[")+1, s1.length());
+                    String s4 = s2.substring(0, s2.indexOf("]"));
+                    String[] splitStr2 = s3.split("[=]");
+                    String[] splitStr3 = s4.split("[=]");
+                    String s5 = splitStr2[0];
+                    String s6 = splitStr2[1];
+                    String s7 = splitStr3[0];
+                    String s8 = splitStr3[1];
+                    if(s5.trim().equals(VariableStorage.getVars(s6.trim())) || s7.trim().equals(VariableStorage.getVars(s8.trim()))){
+                        ScriptIfNode.INSTANCE.perform(s3, s4);
+                        doesPriorIfExist = true;
+                    }else{
+                        throw new IllegalArgumentException("'if' command uses unknown variable: " + ((s5.trim().equals(VariableStorage.getVars(s6.trim()))) ? s5.trim() : s7.trim()), new Throwable(line + " uses an unknown variable"));
                     }
                 }else if(elifpat.matcher(line).matches()){
                     if(doesPriorIfExist) {
                         String[] splitstr = line.split("[|]{2}");
-                        for(String s : splitstr){
-                            String str1 = null, str2 = null;
-                            if(s.contains(":elif[")){
-                                str1 = splitstr[0].substring(s.indexOf("["));
-                            }else if(s.contains("]:")){
-                                str2 = s.substring(s.indexOf("]"));
-                            }
-                            ScriptElifNode.INSTANCE.perform(str1, str2);
+                        String s1 = splitstr[0];
+                        String s2 = splitstr[1];
+                        String s3 = s1.substring(s1.indexOf("[")+1);
+                        String s4 = s2.substring(s2.indexOf("]")-1);
+                        if(s3.equals(VariableStorage.getVars(s4))){
+                            ScriptElifNode.INSTANCE.perform(s3, s4);
                         }
                     }else{
                         throw new RuntimeException("'elif' without 'if'!", new Throwable(String.valueOf(loader.getLineNum(line))));
@@ -135,7 +130,7 @@ public class ScriptDialog {
                     scanner.close();
                 }else{
                     scanner.close();
-                    throw new RuntimeException(line + " is not recognizable!");
+                    throw new IllegalArgumentException(line + " is not recognizable!");
                 }
             }
         }catch(IOException e){

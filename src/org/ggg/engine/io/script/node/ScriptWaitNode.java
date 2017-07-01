@@ -8,8 +8,7 @@ import java.util.*;
 
 public class ScriptWaitNode extends Node{
 
-    private Map<String, String> inputMap = new HashMap<>();
-    public List<Map<String, String>> inputList = new ArrayList<>();
+    public Map<String, String> inputMap = new HashMap<>();
 
     public static final ScriptWaitNode INSTANCE = new ScriptWaitNode(Engine.getScriptLoader());
 
@@ -19,19 +18,13 @@ public class ScriptWaitNode extends Node{
 
     @Override
     public boolean perform(String... params) {
-        Timer timer = new Timer();
-        timer.schedule(new TimerTask() {
-            @Override
-            public void run() {
-                String name = (String)params[0];
-                Scanner scanner = new Scanner(System.in);
-                while(scanner.hasNextLine()){
-                    inputMap.put(name, scanner.nextLine());
-                    inputList.add(inputMap);
-                }
-                scanner.close();
+        Scanner scanner = new Scanner(System.in);
+        while(scanner.hasNext()){
+            inputMap.put(params[0], scanner.nextLine());
+            if(inputMap.size() > 0){
+                break;
             }
-        }, 1000);
+        }
         return true;
     }
 }

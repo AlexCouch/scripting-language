@@ -3,6 +3,7 @@ package org.ggg.engine.io.script.node;
 import org.ggg.engine.Engine;
 import org.ggg.engine.consts.EnumNodes;
 import org.ggg.engine.io.script.ScriptLoader;
+import org.ggg.engine.io.script.node.logic.CompareIfInput;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,47 +19,15 @@ public class ScriptIfNode extends Node{
 
     @Override
     public boolean perform(String...params) {
-        /*List<List> list = new ArrayList<>();
-        if(params[0] instanceof List){
-            List l = (List)params[0];
-            list.add(l);
-            if(params[1] instanceof Set) {
-                Set set = (Set) params[1];
-                for (Object o : set) {
-                    if (o instanceof String) {
-                        value = (String)o;
-                    }
-                }
-            }
-
-            List condlist = list.get(0);
-            if(value != null) {
-                for(Object obj : condlist) {
-                    if(obj instanceof String) {
-                        String str = (String)obj;
-                        if (Boolean.parseBoolean(str)) {
-                            String[] s = str.split("=");
-                            String right = s[1];
-                            if (right.equals(value)) {
-                                return true;
-                            } else {
-                                return false;
-                            }
-                        } else {
-                            return false;
-                        }
-                    }
-                }
-            }
-        }*/
-        for(String s : params){
-            Boolean bool = Boolean.valueOf(s);
-            if(bool){
-                return true;
-            }else{
-                return false;
-            }
+        Boolean bool = compInput(params[0], params[1]);
+        if(bool){
+            return true;
+        }else{
+            return false;
         }
-        return false;
+    }
+
+    private boolean compInput(String variable, String value){
+        return CompareIfInput.compareInput(variable, value);
     }
 }
