@@ -6,6 +6,11 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
+/**
+ * This is used to create conditional logic within the scripts. There is not much to document as it is not finished.
+ * @author Alex Couch
+ * @since 0.1.0
+ */
 public class CompareIfInput {
     private static Map<String, String> input = new HashMap<>();
 

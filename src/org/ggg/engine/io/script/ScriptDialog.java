@@ -21,6 +21,11 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
+/**
+ * This is the class that reads and processes the dialog from the scripts.
+ * @author Alex Couch
+ * @since 0.1.0
+ */
 public class ScriptDialog {
     private ScriptLoader loader;
 
@@ -36,6 +41,11 @@ public class ScriptDialog {
         }
     }
 
+    /**
+     * This gets the total number of lines in the script. This is useful for when you need to do some maths, but not
+     * really useful right now, but it is made for future use, just in case we need it.
+     * @return the total number of lines in the script
+     */
     public long getTotalLines(){
         try(Stream<String> lines = Files.lines(this.getScriptLoader().getScriptFile().toPath(), Charset.defaultCharset())){
             return lines.count();
@@ -45,6 +55,19 @@ public class ScriptDialog {
         return 0;
     }
 
+    /**
+     * Reads and processes the script by passing each line of text into a regex pattern. Right now, there are start, jumpto,
+     * wait, if, elif, and end patterns. There are also patterns for checking if it is plain text as well. If the line is
+     * plain text in between a <em>:start</em> and an <em>:end</em> nodes, then it will print out to the console. If it
+     * matches against the <em>:jumpto</em> node pattern, then it will jump to a new script that is passed into the pattern.
+     * The <em>:wait</em> node is used to retrieve input from the user in some way. The <em>:if[...]</em> node is to
+     * compare conditions, which an implementation that is currently be worked in variables that are created by the
+     * <em>:wait</em> command and can be used to compare against certain values. The <em>:elif[...]</em> command is the
+     * same as the <em>:if[...]</em> but only if there is an <em>:if[...]</em> node before it. Soon there will be a node
+     * that closes the <em>if branches</em> as to not confuse <em>elif's</em> that have nothing to do with another <em>if</em>
+     * block. Lastly, the <em>:end</em> node, ends a sections of the script. A future implementation of the <em>:start and :end</em>
+     * nodes will make it possible to create different dialogs from different <em>characters</em> like a conversation.
+     */
     public void readDialog(){
         Pattern startpat = Pattern.compile("(:start)");
         Pattern jumptopat = Pattern.compile("(:jumpto)\\s\'[a-zA-Z_]+([0-9]*?)\'");
@@ -138,6 +161,12 @@ public class ScriptDialog {
         }
     }
 
+    /**
+     * This method returns the text as a string at the line in the specified file.
+     * @param i the line to find
+     * @param file the file to search
+     * @return the line of text at the specified line
+     */
     public String getDialogAtLine(int i, File file) {
         try(Stream<String> lines = Files.lines(Paths.get(file.getAbsolutePath()))){
             if(Engine.stateOfEngine == EnumEngineState.DEBUGGER_ON) {

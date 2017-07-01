@@ -13,6 +13,24 @@ import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Stream;
 
+/**
+ * This class is super duper important. It takes in a path string so that you can point it at the right {@link ResourceLocation}.
+ * Then the ResourceLocation class checks if the path specified has a file that exists. If not, then it will throw an error.
+ * This class has various important and useful methods such as {@link ScriptLoader#getLineNum(String)} which spits out the
+ * line number in which a string is founded on first. Secondly, {@link ScriptLoader#setNodes()} which sets all the nodes
+ * that are added to the {@link EnumNodes} enum class. This class has a map that has a String for a node name, and a node
+ * that is corresponded with the name. You can then use {@link #getNode(String)} to get the node that matches with a String name.
+ * {@link #getScriptFile()} returns the file that is being loaded. {@link #getFileReader()} returns the FileReader object
+ * that is reading the file. {@link #getBufferedReader()} returns the BufferedReader object. Lastly, {@link #loadScript()}
+ * is like the <em>Engine</em>'s {@link Engine#start(EnumEngineState)} method, in which it initializes everything in this
+ * class. It is used during the start of a new script loader. I am hesitating on having it be set in the constructor or
+ * be called outside the class.
+ * @see EnumNodes
+ * @see Engine
+ * @see ResourceLocation
+ * @author Alex Couch
+ * @since 0.1.0
+ */
 public class ScriptLoader {
     private ResourceLocation resloc;
     private File file;
