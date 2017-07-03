@@ -101,6 +101,7 @@ public class ScriptDialog {
                         File file = new File("resources/scripts/" + fileName + ".gg");
                         ResourceLocation resloc = new ResourceLocation(file.getPath());
                         if (resloc.getFile().exists()) {
+                        	scanner.close();
                             ScriptLoader newLoader = new ScriptLoader(fileName);
                             newLoader.loadScript();
                             ScriptDialog newDialog = new ScriptDialog(newLoader);
@@ -108,6 +109,7 @@ public class ScriptDialog {
                             if(Engine.stateOfEngine == EnumEngineState.DEBUGGER_ON) {
                                 Engine.LOGGER.log("=========================", EnumLoggerTypes.DEBUG);
                             }
+                            break;
                         }
                     }
                 }else if(waitpat.matcher(line).matches()){
