@@ -1,5 +1,15 @@
 package org.ggg.engine.io.script;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.Scanner;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Stream;
+
 import org.ggg.engine.Engine;
 import org.ggg.engine.consts.EnumEngineState;
 import org.ggg.engine.consts.EnumLoggerTypes;
@@ -11,16 +21,6 @@ import org.ggg.engine.io.script.node.ScriptIfNode;
 import org.ggg.engine.io.script.node.ScriptWaitNode;
 import org.ggg.engine.io.script.node.logic.consts.VariableStorage;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.charset.Charset;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.stream.Stream;
-
 /**
  * This is the class that reads and processes the dialog from the scripts.
  * @author Alex Couch
@@ -29,14 +29,15 @@ import java.util.stream.Stream;
 public class ScriptDialog {
     private ScriptLoader loader;
 
-    public ScriptDialog(ScriptLoader loader){
+    public ScriptDialog(ScriptLoader loader) {
         this.loader = loader;
     }
 
-    public ScriptLoader getScriptLoader(){
-        if(loader == null){
+    public ScriptLoader getScriptLoader() {
+        if(loader == null) {
             throw new NullScriptLoaderException("There is no script loader initialized!");
-        }else{
+        }
+        else{
             return loader;
         }
     }
@@ -46,10 +47,11 @@ public class ScriptDialog {
      * really useful right now, but it is made for future use, just in case we need it.
      * @return the total number of lines in the script
      */
-    public long getTotalLines(){
+    public long getTotalLines() {
         try(Stream<String> lines = Files.lines(this.getScriptLoader().getScriptFile().toPath(), Charset.defaultCharset())){
             return lines.count();
-        }catch(IOException e){
+        }
+        catch(IOException e) {
             Engine.LOGGER.log(e.getMessage(), EnumLoggerTypes.ERROR);
         }
         return 0;
@@ -68,7 +70,7 @@ public class ScriptDialog {
      * block. Lastly, the <em>:end</em> node, ends a sections of the script. A future implementation of the <em>:start and :end</em>
      * nodes will make it possible to create different dialogs from different <em>characters</em> like a conversation.
      */
-    public void readDialog(){
+    public void readDialog() {
         Pattern startpat = Pattern.compile("(:start)");
         Pattern jumptopat = Pattern.compile("(:jumpto)\\s\'[a-zA-Z_]+([0-9]*?)\'");
         Pattern waitpat = Pattern.compile("^(:wait)(\\[([a-zA-Z0-9]+)\\]$)");
@@ -80,28 +82,32 @@ public class ScriptDialog {
         String line;
         try(Scanner scanner = new Scanner(loader.getScriptFile())) {
             line = scanner.nextLine();
-            if (startpat.matcher(line).matches()) {
+            if(startpat.matcher(line).matches()) {
                 if(Engine.stateOfEngine == EnumEngineState.DEBUGGER_ON) {
                     Engine.LOGGER.log("Reading from: " + this.loader.getScriptFile().getName() + "\n", EnumLoggerTypes.DEBUG);
                 }
             }
             while(scanner.hasNextLine()) {
                 line = scanner.nextLine();
-                if (Engine.stateOfEngine == EnumEngineState.DEBUGGER_ON) {
-                    Engine.LOGGER.log("Reading dialog from script: " + loader.getScriptFile().getAbsolutePath(), EnumLoggerTypes.DEBUG);
+                if(Engine.stateOfEngine == EnumEngineState.DEBUGGER_ON) {
+                    Engine.LOGGER.log("Reading dialog from script: " + loader.getScriptFile().getAbsolutePath() + " @Line ::" + loader.getLineNum(line) + ":: ", EnumLoggerTypes.DEBUG);
                 }
                 Pattern pat = Pattern.compile("^(([\"]*)([A-Za-z,;'\"\\s]+([:.?!]*))([\"]*))$");
                 Matcher mat = pat.matcher(line);
-                if (mat.matches()) {
+                if(mat.matches()) {
                     Engine.LOGGER.log(line, EnumLoggerTypes.SYSOUT);
-                } else if (jumptopat.matcher(line).matches()) {
+                } 
+                else if(jumptopat.matcher(line).matches()) {
                     String nodeName = EnumNodes.JUMPTO.getName();
-                    String fileName = line.substring(nodeName.length()+3, line.length()-1);
-                    if (fileName.contains(fileName)) {
+                    String fileName = line.substring(nodeName.length() + 3, line.length() - 1);
+                    if(fileName.contains(fileName)) {
                         File file = new File("resources/scripts/" + fileName + ".gg");
                         ResourceLocation resloc = new ResourceLocation(file.getPath());
-                        if (resloc.getFile().exists()) {
+                        if(resloc.getFile().exists()) {
                         	scanner.close();
+                        	if(Engine.stateOfEngine == EnumEngineState.DEBUGGER_ON) {
+                        		Engine.LOGGER.log("Terminating scanner for " + loader.getScriptFile().getAbsolutePath(), EnumLoggerTypes.DEBUG);
+                        	}
                             ScriptLoader newLoader = new ScriptLoader(fileName);
                             newLoader.loadScript();
                             ScriptDialog newDialog = new ScriptDialog(newLoader);
@@ -112,23 +118,25 @@ public class ScriptDialog {
                             break;
                         }
                     }
-                }else if(waitpat.matcher(line).matches()){
+                }
+                else if(waitpat.matcher(line).matches()) {
                     int beginIndex = line.indexOf("[");
                     int endIndex = line.lastIndexOf("]");
-                    String arg = line.substring(beginIndex+1, endIndex);
+                    String arg = line.substring(beginIndex + 1, endIndex);
                     if(ScriptWaitNode.isInt(arg)) {
                     	ScriptWaitNode.INSTANCE.scheduleTimer(Integer.parseInt(arg));
                     }
-                    else if(ScriptWaitNode.INSTANCE.perform(arg)){
-                        for(String s : ScriptWaitNode.INSTANCE.inputMap.values()){
+                    else if(ScriptWaitNode.INSTANCE.perform(arg)) {
+                        for(String s : ScriptWaitNode.INSTANCE.inputMap.values()) {
                             VariableStorage.setVars(arg, s);
                         }
                     }
-                }else if(ifpat.matcher(line).matches()) {
+                }
+                else if(ifpat.matcher(line).matches()) {
                     String[] splitStr = line.split("[|]{2}");
                     String s1 = splitStr[0];
                     String s2 = splitStr[1];
-                    String s3 = s1.substring(s1.indexOf("[")+1, s1.length());
+                    String s3 = s1.substring(s1.indexOf("[") + 1, s1.length());
                     String s4 = s2.substring(0, s2.indexOf("]"));
                     String[] splitStr2 = s3.split("[=]");
                     String[] splitStr3 = s4.split("[=]");
@@ -136,12 +144,13 @@ public class ScriptDialog {
                     String s6 = splitStr2[1].trim();
                     String s7 = splitStr3[0].trim();
                     String s8 = splitStr3[1].trim();
-                    for(String key: VariableStorage.getVarValue()) {
+                    for(String key: VariableStorage.getKeys()) {
                     	if(s5.equals(key)) {
                     		if(ScriptIfNode.INSTANCE.perform(s5, s6)) {
                     			doesPriorIfExist = true;
                     			didPriorIfComplete = true;
-                    		}else {
+                    		}
+                    		else {
                                 doesPriorIfExist = true;
                                 didPriorIfComplete = false;
                                 scanner.nextLine();
@@ -151,7 +160,8 @@ public class ScriptDialog {
                     		if(ScriptIfNode.INSTANCE.perform(s7, s8)) {
                         		doesPriorIfExist = true;
                         		didPriorIfComplete = true;
-                    		}else{
+                    		}
+                    		else {
                                 doesPriorIfExist = true;
                                 didPriorIfComplete = false;
                                 scanner.nextLine();
@@ -161,13 +171,14 @@ public class ScriptDialog {
                             throw new IllegalArgumentException("'if' command uses unknown key: " + (key != null ? s5.trim() : s7.trim()), new Throwable(line + " uses an unknown key"));
                     	}
                     }
-                }else if(elifpat.matcher(line).matches()){
+                }
+                else if(elifpat.matcher(line).matches()) {
                     if(doesPriorIfExist) {
                     	if(!didPriorIfComplete) {
                     		String[] splitstr = line.split("[|]{2}");
                     		String s1 = splitstr[0];
                     		String s2 = splitstr[1];
-                    		String s3 = s1.substring(s1.indexOf("[")+1, s1.length());
+                    		String s3 = s1.substring(s1.indexOf("[") + 1, s1.length());
                     		String s4 = s2.substring(0, s2.indexOf("]"));
                     		String[] splitStr2 = s3.split("[=]");
                     		String[] splitStr3 = s4.split("[=]");
@@ -175,12 +186,13 @@ public class ScriptDialog {
                     		String s6 = splitStr2[1];
                     		String s7 = splitStr3[0];
                     		String s8 = splitStr3[1];
-                    		for(String key: VariableStorage.getVarValue()) {
+                    		for(String key: VariableStorage.getKeys()) {
                             	if(s5.trim().equals(key)) {
                             		if(ScriptElifNode.INSTANCE.perform(s5, s6)) {
                             			doesPriorIfExist = true;
                             			didPriorIfComplete = true;
-                            		}else {
+                            		}
+                            		else {
                                         doesPriorIfExist = true;
                                         didPriorIfComplete = false;
                                     }
@@ -189,7 +201,8 @@ public class ScriptDialog {
                             		if(ScriptElifNode.INSTANCE.perform(s7, s8)) {
                                 		doesPriorIfExist = true;
                                 		didPriorIfComplete = true;
-                            		}else {
+                            		}
+                            		else {
                                         doesPriorIfExist = true;
                                         didPriorIfComplete = false;
                                     }
@@ -203,18 +216,25 @@ public class ScriptDialog {
                     		scanner.nextLine();
                     	}
                     }
-                    else{
-                        throw new RuntimeException("'elif' without 'if'!", new Throwable(String.valueOf(loader.getLineNum(line))));
+                    else
+                    {
+                        throw new RuntimeException("'elif' called without 'if'", new Throwable(String.valueOf(loader.getLineNum(line))));
                     }
-                }else if (endpat.matcher(line).matches()) {
+                }
+                else if(endpat.matcher(line).matches()) {
                     scanner.close();
+                    if(Engine.stateOfEngine == EnumEngineState.DEBUGGER_ON) {
+                    	Engine.LOGGER.log("Terminating scanner for " + loader.getScriptFile().getAbsolutePath(), EnumLoggerTypes.DEBUG);
+                    }
                     break;
-                }else{
+                }
+                else {
                     scanner.close();
                     throw new IllegalArgumentException(line + " is not recognizable!");
                 }
             }
-        }catch(IOException e){
+        }
+        catch(IOException e){
             Engine.LOGGER.log(e.getMessage(), EnumLoggerTypes.ERROR);
         }
     }
@@ -226,12 +246,13 @@ public class ScriptDialog {
      * @return the line of text at the specified line
      */
     public String getDialogAtLine(int i, File file) {
-        try(Stream<String> lines = Files.lines(Paths.get(file.getAbsolutePath()))){
+        try(Stream<String> lines = Files.lines(Paths.get(file.getAbsolutePath()))) {
             if(Engine.stateOfEngine == EnumEngineState.DEBUGGER_ON) {
                 Engine.LOGGER.log("Reading line from script: " + loader.getScriptFile().getAbsolutePath(), EnumLoggerTypes.DEBUG);
             }
             return lines.skip(i).findFirst().orElse(null);
-        }catch(IOException e){
+        }
+        catch(IOException e) {
             Engine.LOGGER.log(e.getMessage(), EnumLoggerTypes.ERROR);
         }
         return null;

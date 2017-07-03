@@ -21,7 +21,7 @@ public class VariableStorage {
         return variables.get(value);
     }
 
-    public static Set<String> getVarValue(){
+    public static Set<String> getKeys(){
         return variables.keySet();
     }
 }
