@@ -90,7 +90,7 @@ public class ScriptDialog {
                 if (Engine.stateOfEngine == EnumEngineState.DEBUGGER_ON) {
                     Engine.LOGGER.log("Reading dialog from script: " + loader.getScriptFile().getAbsolutePath(), EnumLoggerTypes.DEBUG);
                 }
-                Pattern pat = Pattern.compile("^(([\"]*)([A-Za-z,;:'\"\\s]+([.?!]*))([\"]*))$");
+                Pattern pat = Pattern.compile("^(([\"]*)([A-Za-z',]+([.?!;:\"\\s]*))([\"]*))$");
                 Matcher mat = pat.matcher(line);
                 if (mat.matches()) {
                     Engine.LOGGER.log(line, EnumLoggerTypes.SYSOUT);
@@ -130,29 +130,31 @@ public class ScriptDialog {
                     String s4 = s2.substring(0, s2.indexOf("]"));
                     String[] splitStr2 = s3.split("[=]");
                     String[] splitStr3 = s4.split("[=]");
-                    String s5 = splitStr2[0];
-                    String s6 = splitStr2[1];
-                    String s7 = splitStr3[0];
-                    String s8 = splitStr3[1];
+                    String s5 = splitStr2[0].trim();
+                    String s6 = splitStr2[1].trim();
+                    String s7 = splitStr3[0].trim();
+                    String s8 = splitStr3[1].trim();
                     for(String key: VariableStorage.getVarValue()) {
-                    	if(s5.trim().equals(key)) {
+                    	if(s5.equals(key)) {
                     		if(ScriptIfNode.INSTANCE.perform(s5, s6)) {
                     			doesPriorIfExist = true;
                     			didPriorIfComplete = true;
-                    		}
-                    		doesPriorIfExist = true;
-                    		didPriorIfComplete = false;
+                    		}else {
+                                doesPriorIfExist = false;
+                                didPriorIfComplete = false;
+                            }
                     	}
-                    	else if(s7.trim().equals(key)) {
+                    	else if(s7.equals(key)) {
                     		if(ScriptIfNode.INSTANCE.perform(s7, s8)) {
                         		doesPriorIfExist = true;
                         		didPriorIfComplete = true;
-                    		}
-                    		doesPriorIfExist = true;
-                    		didPriorIfComplete = false;
-                    	}
+                    		}else{
+                                doesPriorIfExist = false;
+                                didPriorIfComplete = false;
+                            }
+                        }
                     	else {
-                    		throw new IllegalArgumentException("'if' command uses unknown key: " + (key != null ? s5.trim() : s7.trim()), new Throwable(line + " uses an unknown key"));
+                            throw new IllegalArgumentException("'if' command uses unknown key: " + (key != null ? s5.trim() : s7.trim()), new Throwable(line + " uses an unknown key"));
                     	}
                     }
                 }else if(elifpat.matcher(line).matches()){
@@ -180,17 +182,19 @@ public class ScriptDialog {
                             		if(ScriptElifNode.INSTANCE.perform(s5, s6)) {
                             			doesPriorIfExist = true;
                             			didPriorIfComplete = true;
-                            		}
-                            		doesPriorIfExist = true;
-                            		didPriorIfComplete = false;
+                            		}else {
+                                        doesPriorIfExist = true;
+                                        didPriorIfComplete = false;
+                                    }
                             	}
                             	else if(s7.trim().equals(key)) {
                             		if(ScriptElifNode.INSTANCE.perform(s7, s8)) {
                                 		doesPriorIfExist = true;
                                 		didPriorIfComplete = true;
-                            		}
-                            		doesPriorIfExist = true;
-                            		didPriorIfComplete = false;
+                            		}else {
+                                        doesPriorIfExist = true;
+                                        didPriorIfComplete = false;
+                                    }
                             	}
                             	else {
                             		throw new IllegalArgumentException("'elif' command uses unknown key: " + (key != null ? s5.trim() : s7.trim()), new Throwable(line + " uses an unknown key"));
