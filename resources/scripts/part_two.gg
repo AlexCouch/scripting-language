@@ -1,8 +1,8 @@
 :start
-Now that you listened to my boring story,
-Let's being.
+Now that you've listened to my boring story,
+Let's begin.
 You are all alone in a forest!
-You come to a fork in a rode:
+You come to a fork in a road:
 Will you take a left, or a right?
 :wait[input]
 :if[input=right || input=Right]:
