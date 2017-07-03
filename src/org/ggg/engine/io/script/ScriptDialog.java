@@ -90,7 +90,7 @@ public class ScriptDialog {
                 if (Engine.stateOfEngine == EnumEngineState.DEBUGGER_ON) {
                     Engine.LOGGER.log("Reading dialog from script: " + loader.getScriptFile().getAbsolutePath(), EnumLoggerTypes.DEBUG);
                 }
-                Pattern pat = Pattern.compile("^(([\"]*)([A-Za-z,:;'\"\\s]+([.?!]*))([\"]*))$");
+                Pattern pat = Pattern.compile("^(([\"]*)([A-Za-z,;'\"\\s]+([:.?!]*))([\"]*))$");
                 Matcher mat = pat.matcher(line);
                 if (mat.matches()) {
                     Engine.LOGGER.log(line, EnumLoggerTypes.SYSOUT);
@@ -206,6 +206,7 @@ public class ScriptDialog {
                     }
                 }else if (endpat.matcher(line).matches()) {
                     scanner.close();
+                    break;
                 }else{
                     scanner.close();
                     throw new IllegalArgumentException(line + " is not recognizable!");
