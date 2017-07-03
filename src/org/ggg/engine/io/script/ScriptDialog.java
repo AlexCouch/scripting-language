@@ -90,7 +90,7 @@ public class ScriptDialog {
             while(scanner.hasNextLine()) {
                 line = scanner.nextLine();
                 if(Engine.stateOfEngine == EnumEngineState.DEBUGGER_ON) {
-                    Engine.LOGGER.log("Reading dialog from script: " + loader.getScriptFile().getAbsolutePath() + " @Line ::" + loader.getLineNum(line) + ":: ", EnumLoggerTypes.DEBUG);
+                    Engine.LOGGER.log("Reading dialog from script: " + loader.getScriptFile().getName() + " @Line: " + loader.getLineNum(line), EnumLoggerTypes.DEBUG);
                 }
                 Pattern pat = Pattern.compile("^(([\"]*)([A-Za-z,;'\"\\s]+([:.?!]*))([\"]*))$");
                 Matcher mat = pat.matcher(line);
@@ -106,7 +106,7 @@ public class ScriptDialog {
                         if(resloc.getFile().exists()) {
                         	scanner.close();
                         	if(Engine.stateOfEngine == EnumEngineState.DEBUGGER_ON) {
-                        		Engine.LOGGER.log("Terminating scanner for " + loader.getScriptFile().getAbsolutePath(), EnumLoggerTypes.DEBUG);
+                        		Engine.LOGGER.log("Terminating scanner for script: " + loader.getScriptFile().getName(), EnumLoggerTypes.DEBUG);
                         	}
                             ScriptLoader newLoader = new ScriptLoader(fileName);
                             newLoader.loadScript();
@@ -224,7 +224,7 @@ public class ScriptDialog {
                 else if(endpat.matcher(line).matches()) {
                     scanner.close();
                     if(Engine.stateOfEngine == EnumEngineState.DEBUGGER_ON) {
-                    	Engine.LOGGER.log("Terminating scanner for " + loader.getScriptFile().getAbsolutePath(), EnumLoggerTypes.DEBUG);
+                    	Engine.LOGGER.log("Terminating scanner for script: " + loader.getScriptFile().getName(), EnumLoggerTypes.DEBUG);
                     }
                     break;
                 }
@@ -248,7 +248,7 @@ public class ScriptDialog {
     public String getDialogAtLine(int i, File file) {
         try(Stream<String> lines = Files.lines(Paths.get(file.getAbsolutePath()))) {
             if(Engine.stateOfEngine == EnumEngineState.DEBUGGER_ON) {
-                Engine.LOGGER.log("Reading line from script: " + loader.getScriptFile().getAbsolutePath(), EnumLoggerTypes.DEBUG);
+                Engine.LOGGER.log("Reading line from script: " + loader.getScriptFile().getName(), EnumLoggerTypes.DEBUG);
             }
             return lines.skip(i).findFirst().orElse(null);
         }

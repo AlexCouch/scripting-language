@@ -38,7 +38,7 @@ public class EngineLogger {
     public <T> void log(T message, EnumLoggerTypes type){
         if(logger.isEmpty()) return;
         if(type == EnumLoggerTypes.NONE) {
-            System.out.println(logger + getMessageType(message));
+            System.out.println(logger.concat("] ") + getMessageType(message));
         }else if(type == EnumLoggerTypes.SYSOUT){
             System.out.println(logger.concat("/SYSOUT] ") + getMessageType(message));
         }else if(type == EnumLoggerTypes.DEBUG){

@@ -1,3 +1,4 @@
+
 package org.ggg.engine.io.script;
 
 import java.io.BufferedReader;
@@ -48,17 +49,18 @@ public class ScriptLoader {
         }
     }
 
-    public long getLineNum(String startsWith) {
+	public long getLineNum(String line) {
     	try {
     		FileReader fr = new FileReader(resloc.getFile().getAbsolutePath());
     		LineNumberReader lnr = new LineNumberReader(fr);
     		lnr.setLineNumber(0);
     		String str = null;
     		while((str = lnr.readLine()) != null) {
-    			if(str.equals(startsWith)) {
+    			if(str.equals(line)) {
     				break;
     			}
     		}
+    		lnr.close();
     		return lnr.getLineNumber();
     	}
     	catch (FileNotFoundException e) {
