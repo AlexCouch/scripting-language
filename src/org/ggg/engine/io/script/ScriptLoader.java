@@ -60,6 +60,17 @@ public class ScriptLoader {
         }
         return 0;
     }
+    
+    public void skipLines(int num) {
+    	try {
+			Scanner scanner = new Scanner(file);
+			for(int i = 0; i < num; i++) {
+				scanner.nextLine();
+			}
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
+    }
 
     public void setNodes(){
         for(EnumNodes node : EnumNodes.values()) {

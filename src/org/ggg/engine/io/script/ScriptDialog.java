@@ -71,11 +71,12 @@ public class ScriptDialog {
     public void readDialog(){
         Pattern startpat = Pattern.compile("(:start)");
         Pattern jumptopat = Pattern.compile("(:jumpto)\\s\'[a-zA-Z_]+([0-9]*?)\'");
-        Pattern waitpat = Pattern.compile("^(:wait)(\\[([a-zA-Z]+)\\]$)");
+        Pattern waitpat = Pattern.compile("^(:wait)(\\[([a-zA-Z0-9]+)\\]$)");
         Pattern ifpat = Pattern.compile("^(:if)(\\[([a-zA-Z]+)=([a-zA-Z]+)([\\s]*)\\|\\|([\\s]*)([a-zA-Z]+)=([a-zA-Z]+)([\\s]*)\\]:)");
         Pattern elifpat = Pattern.compile("^(:elif)(\\[([a-zA-Z]+)=([a-zA-Z]+)([\\s]*)\\|\\|([\\s]*)([a-zA-Z]+)=([a-zA-Z]+)([\\s]*)\\]:)");
         Pattern endpat = Pattern.compile("(:end)");
         boolean doesPriorIfExist = false;
+        boolean didPriorIfComplete = false;
         String line;
         try(Scanner scanner = new Scanner(loader.getScriptFile())) {
             line = scanner.nextLine();
@@ -113,7 +114,10 @@ public class ScriptDialog {
                     int beginIndex = line.indexOf("[");
                     int endIndex = line.lastIndexOf("]");
                     String arg = line.substring(beginIndex+1, endIndex);
-                    if(ScriptWaitNode.INSTANCE.perform(arg)){
+                    if(ScriptWaitNode.isInt(arg)) {
+                    	ScriptWaitNode.INSTANCE.scheduleTimer(Integer.parseInt(arg));
+                    }
+                    else if(ScriptWaitNode.INSTANCE.perform(arg)){
                         for(String s : ScriptWaitNode.INSTANCE.inputMap.values()){
                             VariableStorage.setVars(arg, s);
                         }
@@ -134,33 +138,67 @@ public class ScriptDialog {
                     	if(s5.trim().equals(key)) {
                     		if(ScriptIfNode.INSTANCE.perform(s5, s6)) {
                     			doesPriorIfExist = true;
+                    			didPriorIfComplete = true;
                     		}
+                    		doesPriorIfExist = true;
+                    		didPriorIfComplete = false;
                     	}
                     	else if(s7.trim().equals(key)) {
                     		if(ScriptIfNode.INSTANCE.perform(s7, s8)) {
                         		doesPriorIfExist = true;
+                        		didPriorIfComplete = true;
                     		}
+                    		doesPriorIfExist = true;
+                    		didPriorIfComplete = false;
                     	}
                     	else {
-                    		throw new IllegalArgumentException("'if' command uses unknown key: " + (key != null ? s5.trim() : s7.trim()), new Throwable(line + " uses an unknown variable"));
+                    		throw new IllegalArgumentException("'if' command uses unknown key: " + (key != null ? s5.trim() : s7.trim()), new Throwable(line + " uses an unknown key"));
                     	}
                     }
                 }else if(elifpat.matcher(line).matches()){
+                	System.out.println(doesPriorIfExist);
                     if(doesPriorIfExist) {
-                        String[] splitstr = line.split("[|]{2}");
-                        String s1 = splitstr[0];
-                        String s2 = splitstr[1];
-                        String s3 = s1.substring(s1.indexOf("[")+1);
-                        String s4 = s2.substring(s2.indexOf("]")-1);
-                        System.out.println("splitstr: " + splitstr);
-                        System.out.println("s1: " + s1);
-                        System.out.println("s2: " + s2);
-                        System.out.println("s3: " + s3);
-                        System.out.println("s4: " + s4);
-                        if(s3.equals(VariableStorage.getVars(s4))){
-                            ScriptElifNode.INSTANCE.perform(s3, s4);
-                        }
-                    }else{
+                    	if(!didPriorIfComplete) {
+                    		String[] splitstr = line.split("[|]{2}");
+                    		String s1 = splitstr[0];
+                    		String s2 = splitstr[1];
+                    		String s3 = s1.substring(s1.indexOf("[")+1, s1.length());
+                    		String s4 = s2.substring(0, s2.indexOf("]"));
+                    		String[] splitStr2 = s3.split("[=]");
+                    		String[] splitStr3 = s4.split("[=]");
+                    		String s5 = splitStr2[0];
+                    		String s6 = splitStr2[1];
+                    		String s7 = splitStr3[0];
+                    		String s8 = splitStr3[1];
+                    		System.out.println("splitstr: " + splitstr);
+                    		System.out.println("s1: " + s1);
+                    		System.out.println("s2: " + s2);
+                    		System.out.println("s3: " + s3);
+                    		System.out.println("s4: " + s4);
+                    		for(String key: VariableStorage.getVarValue()) {
+                            	if(s5.trim().equals(key)) {
+                            		if(ScriptElifNode.INSTANCE.perform(s5, s6)) {
+                            			doesPriorIfExist = true;
+                            			didPriorIfComplete = true;
+                            		}
+                            		doesPriorIfExist = true;
+                            		didPriorIfComplete = false;
+                            	}
+                            	else if(s7.trim().equals(key)) {
+                            		if(ScriptElifNode.INSTANCE.perform(s7, s8)) {
+                                		doesPriorIfExist = true;
+                                		didPriorIfComplete = true;
+                            		}
+                            		doesPriorIfExist = true;
+                            		didPriorIfComplete = false;
+                            	}
+                            	else {
+                            		throw new IllegalArgumentException("'elif' command uses unknown key: " + (key != null ? s5.trim() : s7.trim()), new Throwable(line + " uses an unknown key"));
+                            	}
+                            }
+                    	}
+                    }
+                    else{
                         throw new RuntimeException("'elif' without 'if'!", new Throwable(String.valueOf(loader.getLineNum(line))));
                     }
                 }else if (endpat.matcher(line).matches()) {
