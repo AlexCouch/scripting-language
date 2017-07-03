@@ -90,7 +90,7 @@ public class ScriptDialog {
                 if (Engine.stateOfEngine == EnumEngineState.DEBUGGER_ON) {
                     Engine.LOGGER.log("Reading dialog from script: " + loader.getScriptFile().getAbsolutePath(), EnumLoggerTypes.DEBUG);
                 }
-                Pattern pat = Pattern.compile("^(([\"]*)([A-Za-z',]+([.?!;:\"\\s]*))([\"]*))$");
+                Pattern pat = Pattern.compile("^(([\"]*)([A-Za-z,:;'\"\\s]+([.?!]*))([\"]*))$");
                 Matcher mat = pat.matcher(line);
                 if (mat.matches()) {
                     Engine.LOGGER.log(line, EnumLoggerTypes.SYSOUT);
@@ -140,8 +140,9 @@ public class ScriptDialog {
                     			doesPriorIfExist = true;
                     			didPriorIfComplete = true;
                     		}else {
-                                doesPriorIfExist = false;
+                                doesPriorIfExist = true;
                                 didPriorIfComplete = false;
+                                scanner.nextLine();
                             }
                     	}
                     	else if(s7.equals(key)) {
@@ -149,8 +150,9 @@ public class ScriptDialog {
                         		doesPriorIfExist = true;
                         		didPriorIfComplete = true;
                     		}else{
-                                doesPriorIfExist = false;
+                                doesPriorIfExist = true;
                                 didPriorIfComplete = false;
+                                scanner.nextLine();
                             }
                         }
                     	else {
@@ -158,7 +160,6 @@ public class ScriptDialog {
                     	}
                     }
                 }else if(elifpat.matcher(line).matches()){
-                	System.out.println(doesPriorIfExist);
                     if(doesPriorIfExist) {
                     	if(!didPriorIfComplete) {
                     		String[] splitstr = line.split("[|]{2}");
@@ -172,11 +173,6 @@ public class ScriptDialog {
                     		String s6 = splitStr2[1];
                     		String s7 = splitStr3[0];
                     		String s8 = splitStr3[1];
-                    		System.out.println("splitstr: " + splitstr);
-                    		System.out.println("s1: " + s1);
-                    		System.out.println("s2: " + s2);
-                    		System.out.println("s3: " + s3);
-                    		System.out.println("s4: " + s4);
                     		for(String key: VariableStorage.getVarValue()) {
                             	if(s5.trim().equals(key)) {
                             		if(ScriptElifNode.INSTANCE.perform(s5, s6)) {
@@ -200,6 +196,9 @@ public class ScriptDialog {
                             		throw new IllegalArgumentException("'elif' command uses unknown key: " + (key != null ? s5.trim() : s7.trim()), new Throwable(line + " uses an unknown key"));
                             	}
                             }
+                    	}
+                    	else {
+                    		scanner.nextLine();
                     	}
                     }
                     else{
