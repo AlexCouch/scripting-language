@@ -130,11 +130,20 @@ public class ScriptDialog {
                     String s6 = splitStr2[1];
                     String s7 = splitStr3[0];
                     String s8 = splitStr3[1];
-                    if(s5.trim().equals(VariableStorage.getVars(s6.trim())) || s7.trim().equals(VariableStorage.getVars(s8.trim()))){
-                        ScriptIfNode.INSTANCE.perform(s3, s4);
-                        doesPriorIfExist = true;
-                    }else{
-                        throw new IllegalArgumentException("'if' command uses unknown variable: " + ((s5.trim().equals(VariableStorage.getVars(s6.trim()))) ? s5.trim() : s7.trim()), new Throwable(line + " uses an unknown variable"));
+                    for(String key: VariableStorage.getVarValue()) {
+                    	if(s5.trim().equals(key)) {
+                    		if(ScriptIfNode.INSTANCE.perform(s5, s6)) {
+                    			doesPriorIfExist = true;
+                    		}
+                    	}
+                    	else if(s7.trim().equals(key)) {
+                    		if(ScriptIfNode.INSTANCE.perform(s7, s8)) {
+                        		doesPriorIfExist = true;
+                    		}
+                    	}
+                    	else {
+                    		throw new IllegalArgumentException("'if' command uses unknown key: " + (key != null ? s5.trim() : s7.trim()), new Throwable(line + " uses an unknown variable"));
+                    	}
                     }
                 }else if(elifpat.matcher(line).matches()){
                     if(doesPriorIfExist) {
@@ -143,6 +152,11 @@ public class ScriptDialog {
                         String s2 = splitstr[1];
                         String s3 = s1.substring(s1.indexOf("[")+1);
                         String s4 = s2.substring(s2.indexOf("]")-1);
+                        System.out.println("splitstr: " + splitstr);
+                        System.out.println("s1: " + s1);
+                        System.out.println("s2: " + s2);
+                        System.out.println("s3: " + s3);
+                        System.out.println("s4: " + s4);
                         if(s3.equals(VariableStorage.getVars(s4))){
                             ScriptElifNode.INSTANCE.perform(s3, s4);
                         }

@@ -15,7 +15,7 @@ public class CompareIfInput {
     private static Map<String, String> input = new HashMap<>();
 
     public static boolean compareInput(String variable, String value){
-        return VariableStorage.getVarValue(variable).equals(value);
+    	return VariableStorage.getVars(variable).equals(value);
     }
 
     public static void setValues(String variable, String value){
@@ -26,7 +26,7 @@ public class CompareIfInput {
         return input.get(variable);
     }
 
-    public static String getVaraible(String value){
+    public static String getVariable(String value){
         return input.get(value);
     }
 }

@@ -19,7 +19,8 @@ public class ScriptWaitNode extends Node{
     @Override
     public boolean perform(String... params) {
         Scanner scanner = new Scanner(System.in);
-        while(scanner.hasNext()){
+        
+        while(scanner.hasNextLine()){
             inputMap.put(params[0], scanner.nextLine());
             if(inputMap.size() > 0){
                 break;

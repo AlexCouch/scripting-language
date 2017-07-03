@@ -1,8 +1,8 @@
 package org.ggg.engine.io.script.node.logic.consts;
 
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * This is the class that will store variables with a name and a value, and this way it can be manipulated or used
@@ -21,7 +21,8 @@ public class VariableStorage {
         return variables.get(value);
     }
 
-    public static String getVarValue(String varName){
-        return variables.get(varName);
+    public static Set<String> getVarValue(){
+        Set keys = variables.keySet();
+        return keys;
     }
 }
