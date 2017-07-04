@@ -18,7 +18,9 @@ import org.ggg.engine.exceptions.NullScriptLoaderException;
 import org.ggg.engine.io.resloc.ResourceLocation;
 import org.ggg.engine.io.script.node.ScriptElifNode;
 import org.ggg.engine.io.script.node.ScriptIfNode;
+import org.ggg.engine.io.script.node.ScriptReturnNode;
 import org.ggg.engine.io.script.node.ScriptWaitNode;
+import org.ggg.engine.io.script.node.logic.consts.LoaderStorage;
 import org.ggg.engine.io.script.node.logic.consts.VariableStorage;
 
 /**
@@ -76,11 +78,16 @@ public class ScriptDialog {
         Pattern waitpat = Pattern.compile("^(:wait)(\\[([a-zA-Z0-9]+)\\]$)");
         Pattern ifpat = Pattern.compile("^(:if)(\\[([a-zA-Z]+)=([a-zA-Z]+)([\\s]*)\\|\\|([\\s]*)([a-zA-Z]+)=([a-zA-Z]+)([\\s]*)\\]:)");
         Pattern elifpat = Pattern.compile("^(:elif)(\\[([a-zA-Z]+)=([a-zA-Z]+)([\\s]*)\\|\\|([\\s]*)([a-zA-Z]+)=([a-zA-Z]+)([\\s]*)\\]:)");
+        Pattern returnpat = Pattern.compile("(:return)");
         Pattern endpat = Pattern.compile("(:end)");
         boolean doesPriorIfExist = false;
         boolean didPriorIfComplete = false;
         String line;
         try(Scanner scanner = new Scanner(loader.getScriptFile())) {
+        	if(ScriptReturnNode.INSTANCE.getIsReturn()) {
+        		File returnScript = new File("resources/scripts/" + LoaderStorage.getLastKey() + ".gg");
+        		line = getDialogAtLine(LoaderStorage.getVar(LoaderStorage.getLastKey()), returnScript);
+        	}
             line = scanner.nextLine();
             if(startpat.matcher(line).matches()) {
                 if(Engine.stateOfEngine == EnumEngineState.DEBUGGER_ON) {
@@ -105,6 +112,7 @@ public class ScriptDialog {
                         ResourceLocation resloc = new ResourceLocation(file.getPath());
                         if(resloc.getFile().exists()) {
                         	scanner.close();
+                        	LoaderStorage.setVars(loader.getScriptFile().toString().substring(18, loader.getScriptFile().toString().length() - 3), loader.getLineNum(line));
                         	if(Engine.stateOfEngine == EnumEngineState.DEBUGGER_ON) {
                         		Engine.LOGGER.log("Terminating scanner for script: " + loader.getScriptFile().getName(), EnumLoggerTypes.DEBUG);
                         	}
@@ -221,6 +229,15 @@ public class ScriptDialog {
                         throw new RuntimeException("'elif' called without 'if'", new Throwable(String.valueOf(loader.getLineNum(line))));
                     }
                 }
+                else if(returnpat.matcher(line).matches()) {
+                	scanner.close();
+                	ScriptReturnNode.INSTANCE.setIsReturnTrue();
+                	ScriptLoader newLoader = new ScriptLoader(LoaderStorage.getLastKey());
+                	newLoader.loadScript();
+                	ScriptDialog newDialog = new ScriptDialog(newLoader);
+                	newDialog.readDialog();
+                	break;
+                }
                 else if(endpat.matcher(line).matches()) {
                     scanner.close();
                     if(Engine.stateOfEngine == EnumEngineState.DEBUGGER_ON) {
@@ -241,16 +258,16 @@ public class ScriptDialog {
 
     /**
      * This method returns the text as a string at the line in the specified file.
-     * @param i the line to find
+     * @param lineNum the line to find
      * @param file the file to search
      * @return the line of text at the specified line
      */
-    public String getDialogAtLine(int i, File file) {
+    public String getDialogAtLine(Long lineNum, File file) {
         try(Stream<String> lines = Files.lines(Paths.get(file.getAbsolutePath()))) {
             if(Engine.stateOfEngine == EnumEngineState.DEBUGGER_ON) {
                 Engine.LOGGER.log("Reading line from script: " + loader.getScriptFile().getName(), EnumLoggerTypes.DEBUG);
             }
-            return lines.skip(i).findFirst().orElse(null);
+            return lines.skip(lineNum).findFirst().orElse(null);
         }
         catch(IOException e) {
             Engine.LOGGER.log(e.getMessage(), EnumLoggerTypes.ERROR);

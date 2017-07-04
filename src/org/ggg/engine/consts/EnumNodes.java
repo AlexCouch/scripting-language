@@ -8,6 +8,7 @@ public enum EnumNodes {
     WAIT("wait", ScriptWaitNode.INSTANCE),
     IF("if", ScriptIfNode.INSTANCE),
     ELIF("elif", ScriptElifNode.INSTANCE),
+    RETURN("return", ScriptReturnNode.INSTANCE),
     END("end", ScriptEndNode.INSTANCE);
 
     String name;
