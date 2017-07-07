@@ -9,5 +9,4 @@ Will you take a left, or a right?
 :jumpto 'fork_right'
 :elif[input=left || input=Left]:
 :jumpto 'fork_left'
-This will show if return works.
 :end

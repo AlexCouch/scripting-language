@@ -42,7 +42,8 @@ public class Engine {
     public void start(EnumEngineState state){
         stateOfEngine = state;
         if(state == EnumEngineState.DEBUGGER_ON) {
-            LOGGER.log("Engine initialization starting...", EnumLoggerTypes.SYSOUT);
+            LOGGER.log("Welcome to the debugger version of the Aurora Scripting Language Interpreter!", EnumLoggerTypes.SYSOUT);
+            LOGGER.log("Starting initialization of interpreter!", EnumLoggerTypes.SYSOUT);
         }
         try {
             gameScriptLoader = new ScriptLoader("start");

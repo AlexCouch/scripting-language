@@ -8,9 +8,9 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 public class LoaderStorage {
-	private static Map<String, Long> loaderMem = new LinkedHashMap<String, Long>();
+	private static Map<String, Long> loaderMem = new LinkedHashMap<>();
 	
-	public static void setVars(String key, Long var) {
+	public static void setFile(String key, Long var) {
 		loaderMem.put(key, var);
 	}
 	
@@ -18,12 +18,12 @@ public class LoaderStorage {
 		return loaderMem.keySet();
 	}
 	
-	public static Long getVar(String key) {
+	public static Long getLineNumber(String key) {
 		return loaderMem.get(key);
 	}
 	
 	public static String getLastKey() {
-		List<Entry<String, Long>> entryList = new ArrayList<Map.Entry<String, Long>>(loaderMem.entrySet());
+		List<Entry<String, Long>> entryList = new ArrayList<>(loaderMem.entrySet());
 		Entry<String, Long> lastEntry = entryList.get(entryList.size() - 1);
 		return lastEntry.getKey();
 	}

@@ -1,3 +1,3 @@
 :start
 You just died!
-:return
+:return['part_two']

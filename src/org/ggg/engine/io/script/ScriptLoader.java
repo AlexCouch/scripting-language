@@ -43,7 +43,7 @@ public class ScriptLoader {
     private Map<String, Node> nodes;
 
     public ScriptLoader(String path) throws IOException{
-        resloc = new ResourceLocation("resources/scripts/" + path + ".gg");
+        resloc = new ResourceLocation("resources/scripts/" + path + ".as");
         if(Engine.stateOfEngine == EnumEngineState.DEBUGGER_ON) {
             Engine.LOGGER.log("Loading scripting: " + resloc.getFile().getAbsolutePath(), EnumLoggerTypes.DEBUG);
         }
@@ -54,7 +54,7 @@ public class ScriptLoader {
     		FileReader fr = new FileReader(resloc.getFile().getAbsolutePath());
     		LineNumberReader lnr = new LineNumberReader(fr);
     		lnr.setLineNumber(0);
-    		String str = null;
+    		String str;
     		while((str = lnr.readLine()) != null) {
     			if(str.equals(line)) {
     				break;
@@ -62,9 +62,6 @@ public class ScriptLoader {
     		}
     		lnr.close();
     		return lnr.getLineNumber();
-    	}
-    	catch (FileNotFoundException e) {
-    		Engine.LOGGER.log(e.getMessage(), EnumLoggerTypes.ERROR);
     	}
     	catch (IOException e) {
     		Engine.LOGGER.log(e.getMessage(), EnumLoggerTypes.ERROR);

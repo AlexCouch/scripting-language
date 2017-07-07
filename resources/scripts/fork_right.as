@@ -1,3 +1,3 @@
 :start
 You made it out of the forest!
-:return
+:return['part_two']
