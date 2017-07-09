@@ -2,11 +2,9 @@ package org.ggg.engine.io.script;
 
 import org.ggg.engine.Engine;
 import org.ggg.engine.consts.EnumEngineState;
-import org.ggg.engine.consts.EnumLoggerTypes;
-import org.ggg.engine.consts.EnumNodes;
 import org.ggg.engine.exceptions.NullScriptLoaderException;
-import org.ggg.engine.io.resloc.ResourceLocation;
 import org.ggg.engine.io.script.node.*;
+import org.ggg.engine.io.script.node.logic.CompareIfInput;
 import org.ggg.engine.io.script.node.logic.consts.LoaderStorage;
 import org.ggg.engine.io.script.node.logic.consts.VariableStorage;
 
@@ -20,6 +18,8 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
+
+import static org.ggg.engine.consts.EnumLoggerTypes.*;
 
 /**
  * This is the class that reads and processes the dialog from the scripts.
@@ -50,7 +50,7 @@ public class ScriptDialog {
         try(Stream<String> lines = Files.lines(this.getScriptLoader().getScriptFile().toPath(), Charset.defaultCharset())){
             return lines.count();
         }catch(IOException e){
-            Engine.LOGGER.log(e.getMessage(), EnumLoggerTypes.ERROR);
+            Engine.LOGGER.log(e.getMessage(), ERROR);
         }
         return 0;
     }
@@ -72,7 +72,7 @@ public class ScriptDialog {
         Pattern startpat = Pattern.compile("(:start)");
         Pattern jumptopat = Pattern.compile("(:jumpto)\\s\'[a-zA-Z_]+([0-9]*?)\'");
         Pattern waitpat = Pattern.compile("^(:wait)(\\[([a-zA-Z0-9]+)\\]$)");
-        Pattern ifpat = Pattern.compile("^(:if)(\\[([a-zA-Z]+)=([a-zA-Z]+)([\\s]*)\\|\\|([\\s]*)([a-zA-Z]+)=([a-zA-Z]+)([\\s]*)\\]:)");
+        Pattern ifpat = Pattern.compile("(:if)\\[((\\s)?([a-zA-Z0-9]+)(!)?=([a-zA-Z0-9]+)(\\s)?([&]{2})?([|]{2})?(\\s)?)+\\]:");
         Pattern elifpat = Pattern.compile("^(:elif)(\\[([a-zA-Z]+)=([a-zA-Z]+)([\\s]*)\\|\\|([\\s]*)([a-zA-Z]+)=([a-zA-Z]+)([\\s]*)\\]:)");
         Pattern endpat = Pattern.compile("(:end)");
         Pattern returnpat = Pattern.compile("^(:return)\\[(['])(([a-zA-Z]+)([a-zA-Z0-9_]*))(['])\\]$");
@@ -83,18 +83,18 @@ public class ScriptDialog {
             line = scanner.nextLine();
             if (startpat.matcher(line).matches()) {
                 if(Engine.stateOfEngine == EnumEngineState.DEBUGGER_ON) {
-                    Engine.LOGGER.log("Reading from: " + this.loader.getScriptFile().getName() + "\n", EnumLoggerTypes.DEBUG);
+                    Engine.LOGGER.log("Reading from: " + this.loader.getScriptFile().getName() + "\n", DEBUG);
                 }
             }
             while(scanner.hasNextLine()) {
                 line = scanner.nextLine();
                 if (Engine.stateOfEngine == EnumEngineState.DEBUGGER_ON) {
-                    Engine.LOGGER.log("Reading dialog from script: " + loader.getScriptFile().getAbsolutePath(), EnumLoggerTypes.DEBUG);
+                    Engine.LOGGER.log("Reading dialog from script: " + loader.getScriptFile().getAbsolutePath(), DEBUG);
                 }
                 Pattern pat = Pattern.compile("^(([\"]*)([A-Za-z,;'\"\\s]+([:.?!]*))([\"]*))$");
                 Matcher mat = pat.matcher(line);
                 if (mat.matches()) {
-                    Engine.LOGGER.log(line, EnumLoggerTypes.SYSOUT);
+                    Engine.LOGGER.log(line, SYSOUT);
                 } else if (jumptopat.matcher(line).matches()) {
                     if(ScriptJumpToNode.INSTANCE.perform(line)){
                         LoaderStorage.setFile(this.loader.getScriptFile().getName(), this.loader.getLineNum(line));
@@ -113,41 +113,14 @@ public class ScriptDialog {
                         }
                     }
                 }else if(ifpat.matcher(line).matches()) {
-                    String[] splitStr = line.split("[|]{2}");
-                    String s1 = splitStr[0];
-                    String s2 = splitStr[1];
-                    String s3 = s1.substring(s1.indexOf("[")+1, s1.length());
-                    String s4 = s2.substring(0, s2.indexOf("]"));
-                    String[] splitStr2 = s3.split("[=]");
-                    String[] splitStr3 = s4.split("[=]");
-                    String s5 = splitStr2[0].trim();
-                    String s6 = splitStr2[1].trim();
-                    String s7 = splitStr3[0].trim();
-                    String s8 = splitStr3[1].trim();
-                    for(String key: VariableStorage.getKeys()) {
-                    	if(s5.equals(key)) {
-                    		if(ScriptIfNode.INSTANCE.perform(s5, s6)) {
-                    			doesPriorIfExist = true;
-                    			didPriorIfComplete = true;
-                    		}else {
-                                doesPriorIfExist = true;
-                                didPriorIfComplete = false;
-                                scanner.nextLine();
-                            }
-                    	}
-                    	else if(s7.equals(key)) {
-                    		if(ScriptIfNode.INSTANCE.perform(s7, s8)) {
-                        		doesPriorIfExist = true;
-                        		didPriorIfComplete = true;
-                    		}else{
-                                doesPriorIfExist = true;
-                                didPriorIfComplete = false;
-                                scanner.nextLine();
-                            }
-                        }
-                    	else {
-                            throw new IllegalArgumentException("'if' command uses unknown key: " + (key != null ? s5.trim() : s7.trim()), new Throwable(line + " uses an unknown key"));
-                    	}
+//                    List<String> list = StringUtils.complexSplit(line, "[&]{2}", "[|]{2}");
+                    String[] array = (checkForCompat(line).isEmpty() ? null : (String[])checkForCompat(line).toArray());
+                    if(ScriptIfNode.INSTANCE.perform(array)){
+                        doesPriorIfExist = true;
+                        didPriorIfComplete = true;
+                    }else{
+                        doesPriorIfExist = false;
+                        didPriorIfComplete = false;
                     }
                 }else if(elifpat.matcher(line).matches()){
                     if(doesPriorIfExist) {
@@ -190,8 +163,7 @@ public class ScriptDialog {
                                         doesPriorIfExist = true;
                                         didPriorIfComplete = false;
                                     }
-                            	}
-                            	else {
+                            	}else {
                             		throw new IllegalArgumentException("'elif' command uses unknown key: " + (key != null ? s5.trim() : s7.trim()), new Throwable(line + " uses an unknown key"));
                             	}
                             }
@@ -219,7 +191,7 @@ public class ScriptDialog {
                 }
             }
         }catch(IOException e){
-            Engine.LOGGER.log(e.getMessage(), EnumLoggerTypes.ERROR);
+            Engine.LOGGER.log(e.getMessage(), ERROR);
         }
     }
 
@@ -232,12 +204,31 @@ public class ScriptDialog {
     public String getDialogAtLine(int i, File file) {
         try(Stream<String> lines = Files.lines(Paths.get(file.getAbsolutePath()))){
             if(Engine.stateOfEngine == EnumEngineState.DEBUGGER_ON) {
-                Engine.LOGGER.log("Reading line from script: " + loader.getScriptFile().getAbsolutePath(), EnumLoggerTypes.DEBUG);
+                Engine.LOGGER.log("Reading line from script: " + loader.getScriptFile().getAbsolutePath(), DEBUG);
             }
             return lines.skip(i).findFirst().orElse(null);
         }catch(IOException e){
-            Engine.LOGGER.log(e.getMessage(), EnumLoggerTypes.ERROR);
+            Engine.LOGGER.log(e.getMessage(), ERROR);
         }
         return null;
+    }
+
+    private List<String> checkForCompat(String line){
+        String[] res = line.split("\\s");
+        String regex = "([a-zA-Z0-9]+)=([a-zA-Z0-9]+)";
+        List<String> list = new ArrayList<>();
+        for(int i = 0; i < res.length; i++) {
+            if(i*3 >= res.length) break;
+            String var = res[i*3];
+            list.add(var);
+            String op = res[(1+i)*3];
+            list.add(op);
+            String val = res[(2+i)*3];
+            list.add(val);
+            if(var.matches(regex) && op.matches("\\|\\||&&") && val.matches(regex)) {
+                return list;
+            }
+        }
+        return list;
     }
 }

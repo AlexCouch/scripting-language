@@ -1,5 +1,6 @@
 package org.ggg.engine.io.script.node.logic;
 
+import com.sun.org.apache.xpath.internal.operations.Variable;
 import org.ggg.engine.io.script.node.logic.consts.VariableStorage;
 
 import java.util.HashMap;
@@ -14,8 +15,23 @@ import java.util.Map;
 public class CompareIfInput {
     private static Map<String, String> input = new HashMap<>();
 
-    public static boolean compareInput(String variable, String value){
-    	return VariableStorage.getVars(variable).equals(value);
+    public static boolean compareInput(String variable, String op, String value){
+    	for(String s : VariableStorage.getKeys()) {
+            if(op.equals("&&")){
+                if(s.equals(variable)){
+                    if(value.equals(VariableStorage.getVals(variable))){
+                        return true;
+                    }
+                }
+            }else if(op.equals("||")){
+                if(s.equals(variable)){
+                    if(value.equals(VariableStorage.getVals(variable))){
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
     }
 
     public static void setValues(String variable, String value){

@@ -19,7 +19,7 @@ public class ScriptIfNode extends Node{
 
     @Override
     public boolean perform(String...params) {
-        Boolean bool = compInput(params[0], params[1]);
+        Boolean bool = compInput(params[0], params[1], params[2]);
         if(bool){
             return true;
         }else{
@@ -27,7 +27,7 @@ public class ScriptIfNode extends Node{
         }
     }
 
-    private boolean compInput(String variable, String value){
-        return CompareIfInput.compareInput(variable, value);
+    private boolean compInput(String variable, String op, String value){
+        return CompareIfInput.compareInput(variable, op, value);
     }
 }
